@@ -7,10 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
     
@@ -26,3 +26,11 @@ jobs:
     - name: Run tests
       run: |
         python -m pytest test_model.py -v -s
+        
+    - name: Upload trained model
+      uses: actions/upload-artifact@v3
+      with:
+        name: mnist-model
+        path: models/*.pth
+        if-no-files-found: error  # Fail if no model was saved
+        retention-days: 14  # Keep artifacts for 14 days
