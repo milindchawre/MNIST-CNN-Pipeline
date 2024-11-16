@@ -38,25 +38,26 @@ def train():
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
     
     # Different batch sizes for train and validation
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=256, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=64, shuffle=False)
     
     # Initialize model
     model = MNISTNet().to(device)
     criterion = nn.NLLLoss()
     
-    optimizer = optim.SGD(
+    # Changed from SGD to Adam with optimized parameters
+    optimizer = optim.Adam(
         model.parameters(),
-        lr=0.01,
-        momentum=0.9,
-        weight_decay=1e-4,
-        nesterov=True
+        lr=0.002,  # Back to previous value
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=1e-4
     )
     
     total_steps = len(train_loader)
     scheduler = optim.lr_scheduler.OneCycleLR(
         optimizer,
-        max_lr=0.1,
+        max_lr=0.01,  # Back to previous value
         steps_per_epoch=total_steps,
         epochs=1,
         pct_start=0.2,

@@ -13,6 +13,7 @@ A deep learning pipeline for MNIST digit classification with automated testing a
 │   └── mnist_model.py         # CNN model architecture
 ├── train.py                   # Training script with validation
 ├── test_model.py             # Automated tests
+├── visualize_augmentation.py  # Data augmentation visualization
 ├── requirements.txt          # Project dependencies
 ├── .gitignore               # Git ignore rules
 └── README.md                # Project documentation
@@ -20,10 +21,10 @@ A deep learning pipeline for MNIST digit classification with automated testing a
 
 ## Model Architecture
 
-The model uses a sophisticated CNN architecture with:
+The model uses a CNN architecture with:
 - Three convolutional blocks with feature refinement
 - 1x1 convolutions for channel-wise feature mixing
-- Residual connections for better gradient flow
+- Residual connection in the third block
 - Batch normalization and dropout for regularization
 - GELU activation functions
 - Parameter count under 25,000
@@ -32,16 +33,17 @@ Architecture details:
 1. First Block:
    - Double convolution (1→4→8 channels)
    - 1x1 convolution for feature refinement
-   - MaxPooling and dropout
+   - MaxPooling and dropout (0.2)
 
 2. Second Block:
    - Double convolution (8→12→16 channels)
    - 1x1 convolution for feature refinement
-   - MaxPooling and dropout
+   - MaxPooling and dropout (0.2)
 
 3. Third Block:
    - Convolution (16→32 channels)
    - 1x1 convolution with residual connection
+   - Dropout (0.3)
    - Final classification layer
 
 ## Requirements
@@ -50,6 +52,7 @@ Architecture details:
 - PyTorch >= 1.9.0
 - torchvision >= 0.10.0
 - pytest >= 7.0.0
+- matplotlib >= 3.5.0
 
 ## Local Setup
 
@@ -74,19 +77,28 @@ python train.py
 python -m pytest test_model.py -v -s
 ```
 
+5. Visualize data augmentation:
+```bash
+python visualize_augmentation.py
+```
+
 ## Training Features
 
 - Split training (90%) and validation (10%) sets
 - Data augmentation:
   - Random rotation (±5°)
-  - Random affine transforms
-  - Random erasing
-- Optimized batch sizes:
-  - Training: 256
+  - Random affine transforms (translate: ±5%, scale: 95-105%, shear: 2°)
+  - Random erasing (p=0.1, scale=0.02-0.1)
+- Batch sizes:
+  - Training: 16
   - Validation: 64
-- Learning rate scheduling with OneCycleLR
-- SGD optimizer with Nesterov momentum
-- Gradient clipping for stability
+- Adam optimizer:
+  - Learning rate: 0.002
+  - Weight decay: 1e-4
+- OneCycleLR scheduler:
+  - Max learning rate: 0.01
+  - Cosine annealing
+  - 20% warmup
 
 ## Testing
 
@@ -108,7 +120,8 @@ GitHub Actions workflow automatically:
 - Sets up Python 3.8 environment
 - Installs project dependencies
 - Runs full test suite
-- Reports test results and metrics
+- Uploads trained model as artifact
+- Retains artifacts for 14 days
 
 ## Model Artifacts
 
@@ -120,13 +133,21 @@ mnist_model_YYYYMMDD_HHMMSS_acc{accuracy}.pth
 - Accuracy included in filename
 - Stored in `models/` directory
 
+## Data Augmentation Visualization
+
+The project includes a visualization tool:
+- Saves original MNIST image
+- Shows applied augmentations
+- Helps understand transformation effects
+- Outputs stored in 'visualization' directory
+
 ## Development Notes
 
-- All training is CPU-based for wider compatibility
-- Model optimized for single-epoch training
-- Validation accuracy used for model selection
-- Detailed logging of training progress
+- CPU-based training for wider compatibility
+- Single-epoch optimization
+- Validation-based model selection
 - Parameter-efficient architecture
+- Detailed logging of metrics
 
 ## GitHub Setup
 
@@ -140,14 +161,6 @@ git branch -M main
 git remote add origin <your-repo-url>
 git push -u origin main
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests to ensure compliance
-5. Submit a pull request
 
 ## License
 
