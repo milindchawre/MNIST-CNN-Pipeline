@@ -91,8 +91,9 @@ python visualize_augmentation.py
 
 - Split training (90%) and validation (10%) sets
 - Minimal data augmentation:
-  - Random rotation (±1°)
-  - Random affine transforms (translate: ±1%, scale: 99-101%, shear: 0.2°)
+  - Random rotation (±5°)
+  - Random erasing (p=0.05, scale: 1-3%)
+  - Normalization (mean=0.1307, std=0.3081)
 - Batch sizes:
   - Training: 8
   - Validation: 64

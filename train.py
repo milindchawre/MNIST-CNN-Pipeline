@@ -11,18 +11,12 @@ def train():
     # Set device
     device = torch.device("cpu")
     
-    # Minimal data augmentation for better training accuracy
+    # More aggressive data augmentation while maintaining accuracy
     train_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
-        # Very minimal augmentation
-        transforms.RandomRotation(1),  # Reduced rotation
-        transforms.RandomAffine(
-            degrees=1,
-            translate=(0.01, 0.01),
-            scale=(0.99, 1.01),
-            shear=0.2
-        ),
+        transforms.RandomRotation(5),  # Keep rotation
+        transforms.RandomErasing(p=0.05, scale=(0.01, 0.03))  # Reduced probability and scale
     ])
     
     # Simpler transform for validation

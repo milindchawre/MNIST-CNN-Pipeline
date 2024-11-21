@@ -21,13 +21,8 @@ def save_augmented_samples():
     # Define the same augmentation pipeline used in training
     augmentation = transforms.Compose([
         transforms.Normalize((0.1307,), (0.3081,)),
-        transforms.RandomRotation(1),  # Minimal rotation
-        transforms.RandomAffine(
-            degrees=1,
-            translate=(0.01, 0.01),
-            scale=(0.99, 1.01),
-            shear=0.2
-        )
+        transforms.RandomRotation(5),
+        transforms.RandomErasing(p=1.0, scale=(0.01, 0.03))
     ])
     
     # Apply augmentation
@@ -43,12 +38,9 @@ def save_augmented_samples():
     print("Images saved in 'visualization' directory:")
     print("1. original-image.png - Original MNIST digit")
     print("2. augmented-image.png - After applying training augmentations:")
-    print("   - Random rotation (±1°)")
-    print("   - Random affine transforms:")
-    print("     * Translation: ±1%")
-    print("     * Scale: 99-101%")
-    print("     * Shear: 0.2°")
+    print("   - Random rotation (±5°)")
     print("   - Normalization")
+    print("   - Random erasing (scale: 1-3%)")
 
 if __name__ == "__main__":
     save_augmented_samples() 
