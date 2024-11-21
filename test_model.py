@@ -11,49 +11,85 @@ def count_parameters(model):
     return params_per_layer, total_params
 
 @pytest.mark.filterwarnings('ignore::DeprecationWarning')
-def test_model_architecture(capsys):
+def test_model_parameter_count(capsys):
+    """Test 1: Verify model parameter count is within limits"""
     model = MNISTNet()
     layer_params, total_params = count_parameters(model)
     
-    # Always print parameter counts
-    print("\n=== Model Architecture Details ===")
+    print("\n=== Model Parameter Count Test ===")
     for name, param_count in layer_params:
         print(f"{name:10} : {param_count:,} parameters")
     print("-" * 30)
     print(f"Total Parameters: {total_params:,}")
     print(f"Parameter Limit: 25,000")
-    print(f"Status: {'PASSED' if total_params < 25000 else 'FAILED'}")
     
-    # Test input shape
-    test_input = torch.randn(1, 1, 28, 28)
-    output = model(test_input)
-    print(f"\nInput shape: {test_input.shape}")
-    print(f"Output shape: {output.shape}")
-    
-    # Test output shape and parameters
-    assert output.shape == (1, 10), "Output shape should be (batch_size, 10)"
     assert total_params < 25000, f"Model has {total_params:,} parameters, should be less than 25,000"
+    print("Parameter count test: PASSED")
 
 @pytest.mark.filterwarnings('ignore::DeprecationWarning')
-def test_model_training(capsys):
+def test_model_input_output_shapes():
+    """Test 2: Verify input and output tensor shapes"""
+    model = MNISTNet()
+    test_input = torch.randn(1, 1, 28, 28)
+    output = model(test_input)
+    
+    print("\n=== Shape Test ===")
+    print(f"Input shape: {test_input.shape}")
+    print(f"Output shape: {output.shape}")
+    
+    assert test_input.shape == (1, 1, 28, 28), "Input shape should be (batch_size, 1, 28, 28)"
+    assert output.shape == (1, 10), "Output shape should be (batch_size, 10)"
+    print("Shape test: PASSED")
+
+@pytest.mark.filterwarnings('ignore::DeprecationWarning')
+def test_model_output_properties():
+    """Test 3: Verify model output properties (probabilities)"""
+    model = MNISTNet()
+    test_input = torch.randn(5, 1, 28, 28)
+    output = model(test_input)
+    
+    print("\n=== Output Properties Test ===")
+    print(f"Output sum: {output.exp().sum(dim=1)}")
+    print(f"Output range: [{output.exp().min().item():.6f}, {output.exp().max().item():.6f}]")
+    
+    assert torch.allclose(output.exp().sum(dim=1), torch.ones(5)), "Output probabilities should sum to 1"
+    assert (output.exp() >= 0).all(), "Output probabilities should be non-negative"
+    assert (output.exp() <= 1).all(), "Output probabilities should be <= 1"
+    print("Output properties test: PASSED")
+
+@pytest.mark.filterwarnings('ignore::DeprecationWarning')
+def test_model_batch_processing():
+    """Test 4: Verify model handles different batch sizes"""
+    model = MNISTNet()
+    batch_sizes = [1, 16, 32, 64, 128]
+    
+    print("\n=== Batch Processing Test ===")
+    for batch_size in batch_sizes:
+        test_input = torch.randn(batch_size, 1, 28, 28)
+        output = model(test_input)
+        print(f"Batch size {batch_size}: Input {test_input.shape} -> Output {output.shape}")
+        assert output.shape == (batch_size, 10), f"Failed for batch size {batch_size}"
+    print("Batch processing test: PASSED")
+
+@pytest.mark.filterwarnings('ignore::DeprecationWarning')
+def test_model_training():
+    """Test 5: Verify model training and accuracy"""
     from train import train
-    print("\n=== Starting Model Training Test ===")
+    print("\n=== Training Test ===")
     
     try:
         accuracy, model = train()
         layer_params, total_params = count_parameters(model)
         
-        # Always print final statistics
         print("\n=== Final Model Statistics ===")
         print(f"Total Parameters: {total_params:,}")
         print(f"Achieved Accuracy: {accuracy:.2f}%")
         print(f"Required Accuracy: 95.00%")
-        print(f"Status: {'PASSED' if accuracy > 95.0 else 'FAILED'}")
         
         assert accuracy > 95.0, f"Model accuracy {accuracy:.2f}% is below 95%"
+        print("Training accuracy test: PASSED")
         
     except Exception as e:
-        # Even if test fails, print the statistics
         print("\n=== Test Failed ===")
         print(f"Error: {str(e)}")
         raise

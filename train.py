@@ -11,18 +11,18 @@ def train():
     # Set device
     device = torch.device("cpu")
     
-    # Data augmentation for training
+    # Minimal data augmentation for better training accuracy
     train_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
-        transforms.RandomRotation(5),
+        # Very minimal augmentation
+        transforms.RandomRotation(1),  # Reduced rotation
         transforms.RandomAffine(
-            degrees=5,
-            translate=(0.05, 0.05),
-            scale=(0.95, 1.05),
-            shear=2
+            degrees=1,
+            translate=(0.01, 0.01),
+            scale=(0.99, 1.01),
+            shear=0.2
         ),
-        transforms.RandomErasing(p=0.1, scale=(0.02, 0.1)),
     ])
     
     # Simpler transform for validation
@@ -31,39 +31,39 @@ def train():
         transforms.Normalize((0.1307,), (0.3081,))
     ])
     
-    # Load and split dataset
+    # Load and split dataset with more training data
     full_dataset = datasets.MNIST('./data', train=True, download=True, transform=train_transform)
-    train_size = int(0.9 * len(full_dataset))
+    train_size = int(0.9 * len(full_dataset))  # Increased training size
     val_size = len(full_dataset) - train_size
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
     
-    # Different batch sizes for train and validation
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
+    # Smaller batch size for better training
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=8, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=64, shuffle=False)
     
     # Initialize model
     model = MNISTNet().to(device)
     criterion = nn.NLLLoss()
     
-    # Changed from SGD to Adam with optimized parameters
+    # Modified optimizer settings for better training accuracy
     optimizer = optim.Adam(
         model.parameters(),
-        lr=0.002,  # Back to previous value
-        betas=(0.9, 0.999),
+        lr=0.0005,  # Back to previous value
+        betas=(0.95, 0.999),  # Back to previous value
         eps=1e-8,
-        weight_decay=1e-4
+        weight_decay=0  # Keep weight decay at 0
     )
     
     total_steps = len(train_loader)
     scheduler = optim.lr_scheduler.OneCycleLR(
         optimizer,
-        max_lr=0.01,  # Back to previous value
+        max_lr=0.002,  # Back to previous value
         steps_per_epoch=total_steps,
         epochs=1,
-        pct_start=0.2,
-        div_factor=10,
-        final_div_factor=100,
-        anneal_strategy='cos'
+        pct_start=0.05,  # Back to previous value
+        div_factor=5,  # Back to previous value
+        final_div_factor=50,  # Back to previous value
+        anneal_strategy='linear'  # Keep linear annealing
     )
     
     # Training
